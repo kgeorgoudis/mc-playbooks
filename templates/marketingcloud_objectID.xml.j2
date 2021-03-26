@@ -1,0 +1,21 @@
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <soapenv:Header>
+        <fueloauth>{{ token }}</fueloauth>
+    </soapenv:Header>
+    <soapenv:Body>
+        <RetrieveRequestMsg xmlns="http://exacttarget.com/wsdl/partnerAPI">
+            <RetrieveRequest>
+                <ObjectType>Automation</ObjectType>
+                <Properties>Name</Properties>
+                <Properties>ProgramID</Properties>
+                <Properties>CustomerKey</Properties>
+                <Properties>Status</Properties>
+                <Filter xsi:type="SimpleFilterPart">
+                    <Property>CustomerKey</Property>
+                    <SimpleOperator>equals</SimpleOperator>
+                    <Value>{{ marketingcloud_ext_key }}</Value>
+                </Filter>
+            </RetrieveRequest>
+        </RetrieveRequestMsg>
+    </soapenv:Body>
+</soapenv:Envelope>

@@ -1,0 +1,55 @@
+---
+- hosts: localhost
+  gather_facts: no
+  vars:
+    marketingcloud_api_client_id: ""
+    marketingcloud_api_client_secret: ""
+    marketingcloud_api_account_id: ""
+    marketingcloud_auth_endpoint: "https://YOUR_SUBDOMAIN.auth.marketingcloudapis.com/v2/token"
+    marketingcloud_soap_endpoint: "https://YOUR_SUBDOMAIN.soap.marketingcloudapis.com/Service.asmx"
+    marketingcloud_ext_key: "xxxxxxxx-1234-1234-1234-xxxxxxxxxxxx"
+
+  tasks:
+    - name: Get MarketingCloud token
+      ansible.builtin.uri:
+        url: "{{ marketingcloud_auth_endpoint }}"
+        method: POST
+        body_format: json
+        body: "{{ lookup('template', 'templates/marketingcloud_auth.j2') }}"
+      register: auth
+
+    - name: Set custom fact
+      ansible.builtin.set_fact:
+        token: "{{ auth.json.access_token }}"
+      when: auth.json.access_token is defined
+
+    - name: Get marketingcloud Automation ObjectID
+      ansible.builtin.uri:
+        url: "{{ marketingcloud_soap_endpoint }}"
+        method: POST
+        headers:
+          Content-Type: "text/xml;charset=UTF-8"
+          SoapAction: "Retrieve"
+        body: "{{ lookup('template', 'templates/marketingcloud_objectID.xml.j2') }}"
+        return_content: yes
+      register: soap_retrieve
+      failed_when: "'<ObjectID>' not in soap_retrieve.content"
+
+    - name: Parse SOAP response and set ObjectID variable
+      set_fact:
+        object_id: "{{ soap_retrieve.content | regex_search('<ObjectID>(.+)</ObjectID>', '\\1') | first }}"
+
+    - debug:
+        msg: "The ObhectID is: {{ object_id }}"
+
+    - name: Trigger marketingcloud Automation
+      ansible.builtin.uri:
+        url: "{{ marketingcloud_soap_endpoint }}"
+        method: POST
+        headers:
+          Content-Type: "text/xml;charset=UTF-8"
+          SoapAction: "Perform"
+        body: "{{ lookup('template', 'templates/marketingcloud_start.xml.j2') }}"
+        return_content: yes
+      register: soap_perform
+      failed_when: "'<OverallStatus>OK</OverallStatus>' not in soap_perform.content"

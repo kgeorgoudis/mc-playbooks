@@ -1,2 +1,2 @@
-# mc-playbooks
-marketingcloud ansible playbooks
+# ansible-automation
+
