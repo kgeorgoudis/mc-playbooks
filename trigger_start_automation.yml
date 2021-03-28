@@ -18,7 +18,7 @@
         body: "{{ lookup('template', 'templates/marketingcloud_auth.j2') }}"
       register: auth
 
-    - name: Set custom fact
+    - name: Set token fact
       ansible.builtin.set_fact:
         token: "{{ auth.json.access_token }}"
       when: auth.json.access_token is defined
@@ -36,11 +36,18 @@
       failed_when: "'<ObjectID>' not in soap_retrieve.content"
 
     - name: Parse SOAP response and set ObjectID variable
-      set_fact:
-        object_id: "{{ soap_retrieve.content | regex_search('<ObjectID>(.+)</ObjectID>', '\\1') | first }}"
+      community.general.xml:
+        xmlstring: "{{ soap_retrieve.content }}"
+        xpath: /soap:Envelope/soap:Body/xmlns:RetrieveResponseMsg/xmlns:Results/xmlns:ObjectID
+        namespaces:
+          soap: "http://schemas.xmlsoap.org/soap/envelope/"
+          xmlns: "http://exacttarget.com/wsdl/partnerAPI"
+        content: text
+      register: parse_xml
 
-    - debug:
-        msg: "The ObhectID is: {{ object_id }}"
+    - name: Set object_id fact
+      ansible.builtin.set_fact:
+        object_id: "{{ parse_xml.matches[0]["{http://exacttarget.com/wsdl/partnerAPI}ObjectID"] }}"
 
     - name: Trigger marketingcloud Automation
       ansible.builtin.uri:
@@ -52,4 +59,4 @@
         body: "{{ lookup('template', 'templates/marketingcloud_start.xml.j2') }}"
         return_content: yes
       register: soap_perform
-      failed_when: "'<OverallStatus>OK</OverallStatus>' not in soap_perform.content"
+      failed_when: object_id is not defined
