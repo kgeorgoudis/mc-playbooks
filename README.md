@@ -13,10 +13,14 @@ I have managed to successfully trigger the automation :thumbsup:
 
 ### Improve ObjectID task
 
-The ObjectID is necessary for the trigger task. 
-I tried to get the ObjectID from the XML SOAP response using 
+The ObjectID is necessary for the trigger task
+
+~~I tried to get the ObjectID from the XML SOAP response using 
 the [community.general.xml](https://docs.ansible.com/ansible/latest/collections/community/general/xml_module.html) 
-xpath but no luck :pensive: So I used regex_search ansible filter
+xpath but no luck :pensive: So I used regex_search ansible filter~~
+
+Update: commit 08f420ab44243f4563ed1b950fedf0a7528d8c36 changed the way to get ObjectID using the 
+[community.general.xml](https://docs.ansible.com/ansible/latest/collections/community/general/xml_module.html) module
 
 ### Reference urls:
 
